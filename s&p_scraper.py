@@ -15,9 +15,59 @@ import re
 
 # List of S&P 500 tickers
 SP500_TICKERS = [
-    "NVDA", "JPM", 
-    "HD", "PYPL", "BAC"
+    "AAPL", "NVDA", "MSFT", "AMZN", "META", "GOOGL", "TSLA", "BRK.B", "GOOG", "AVGO",
+    "JPM", "LLY", "UNH", "XOM", "V", "MA", "COST", "HD", "PG", "WMT", "NFLX", "JNJ",
+    "CRM", "BAC", "ABBV", "ORCL", "CVX", "WFC", "MRK", "KO", "CSCO", "ADBE", "ACN",
+    "AMD", "PEP", "NOW", "LIN", "MCD", "IBM", "DIS", "PM", "ABT", "GE", "CAT", "TMO",
+    "ISRG", "GS", "VZ", "TXN", "INTU", "QCOM", "BKNG", "AXP", "SPGI", "T", "CMCSA",
+    "MS", "RTX", "NEE", "PGR", "LOW", "DHR", "AMGN", "UBER", "ETN", "HON", "UNP",
+    "PFE", "AMAT", "BLK", "TJX", "COP", "BX", "SYK", "C", "BSX", "PLTR", "PANW",
+    "FI", "ADP", "SCHW", "VRTX", "TMUS", "BMY", "DE", "MMC", "SBUX", "GILD", "MU",
+    "LMT", "BA", "MDT", "ADI", "KKR", "CB", "PLD", "ANET", "INTC", "UPS", "MO",
+    "SO", "AMT", "LRCX", "TT", "CI", "NKE", "ELV", "GEV", "EQIX", "ICE", "SHW",
+    "PH", "DUK", "PYPL", "APH", "MDLZ", "CMG", "PNC", "CDNS", "KLAC", "SNPS",
+    "AON", "CME", "CRWD", "USB", "CEG", "WM", "MSI", "MCK", "WELL", "REGN", "ZTS",
+    "CL", "MCO", "CTAS", "EMR", "EOG", "ITW", "APD", "CVS", "COF", "MMM", "GD",
+    "ORLY", "WMB", "CSX", "TDG", "AJG", "ADSK", "FDX", "MAR", "NOC", "OKE", "BDX",
+    "CARR", "TFC", "ECL", "NSC", "FCX", "HLT", "SLB", "GM", "ABNB", "FTNT", "HCA",
+    "PCAR", "ROP", "TRV", "BK", "DLR", "SRE", "TGT", "FICO", "NXPI", "URI", "RCL",
+    "AFL", "AMP", "SPG", "PSX", "JCI", "VST", "CPRT", "PSA", "ALL", "KMI", "GWW",
+    "AZO", "AEP", "MPC", "CMI", "MET", "ROST", "PWR", "O", "D", "DHI", "AIG", "NEM",
+    "FAST", "HWM", "MSCI", "PEG", "KMB", "PAYX", "LHX", "FIS", "KVUE", "CCI", "PRU",
+    "PCG", "DFS", "AME", "TEL", "AXON", "VLO", "RSG", "TRGP", "CTVA", "COR", "F",
+    "BKR", "EW", "ODFL", "CBRE", "IR", "VRSK", "LEN", "DAL", "OTIS", "DELL", "HES",
+    "IT", "KR", "CTSH", "XEL", "EA", "EXC", "A", "YUM", "MNST", "HPQ", "VMC", "CHTR",
+    "GEHC", "ACGL", "SYY", "GLW", "MTB", "KDP", "RMD", "GIS", "MCHP", "LULU", "STZ",
+    "NUE", "MLM", "EXR", "IRM", "HIG", "HUM", "WAB", "ED", "DD", "IQV", "IDXX", "NDAQ",
+    "VICI", "EIX", "ROK", "OXY", "AVB", "ETR", "FANG", "CSGP", "GRMN", "FITB", "WTW",
+    "WEC", "EFX", "EBAY", "UAL", "CNC", "RJF", "DXCM", "DOW", "TTWO", "ANSS", "ON",
+    "XYL", "TSCO", "KEYS", "GPN", "CAH", "DECK", "TPL", "STT", "PPG", "HPE", "NVR",
+    "DOV", "KHC", "GDDY", "PHM", "HAL", "MPWR", "FTV", "BR", "TROW", "SW", "TYL", "EQT",
+    "CHD", "BRO", "AWK", "VLTO", "NTAP", "SYF", "VTR", "CPAY", "HBAN", "EQR", "MTD",
+    "DTE", "PPL", "ADM", "CCL", "HSY", "AEE", "RF", "CINF", "HUBB", "SBAC", "PTC", "WDC",
+    "CDW", "DVN", "ATO", "IFF", "EXPE", "WY", "WST", "WAT", "BIIB", "CBOE", "ES", "WBD",
+    "ZBH", "TDY", "LDOS", "NTRS", "PKG", "K", "LYV", "FE", "BLDR", "CFG", "LYB", "STX",
+    "STE", "CNP", "CMS", "NRG", "ZBRA", "CLX", "STLD", "DRI", "FSLR", "IP", "OMC", "COO",
+    "LH", "ESS", "CTRA", "MKC", "SNA", "INVH", "WRB", "LUV", "MAA", "BALL", "PODD", "FDS",
+    "PFG", "HOLX", "KEY", "TSN", "DGX", "PNR", "LVS", "GPC", "TER", "TRMB", "J", "MAS",
+    "IEX", "MOH", "ARE", "BBY", "SMCI", "ULTA", "EXPD", "KIM", "NI", "EL", "BAX", "GEN",
+    "EG", "DPZ", "AVY", "DG", "LNT", "ALGN", "TXT", "CF", "L", "DOC", "VTRS", "VRSN",
+    "JBHT", "JBL", "AMCR", "EVRG", "APTV", "FFIV", "POOL", "ROL", "MRNA", "RVTY", "EPAM",
+    "AKAM", "NDSN", "TPR", "DLTR", "UDR", "SWK", "SWKS", "CPT", "KMX", "CAG", "HST",
+    "SJM", "BG", "JKHY", "DAY", "ALB", "CHRW", "EMN", "UHS", "REG", "ALLE", "BXP", "INCY",
+    "NCLH", "JNPR", "AIZ", "TECH", "GNRC", "IPG", "PAYC", "NWSA", "LW", "CTLT", "ERIE",
+    "TAP", "PNW", "FOXA", "LKQ", "CRL", "GL", "SOLV", "MKTX", "HSIC", "ENPH", "HRL",
+    "CPB", "TFX", "RL", "AES", "AOS", "FRT", "MGM", "WYNN", "MTCH", "HAS", "CZR", "APA",
+    "IVZ", "MOS", "CE", "BWA", "HII", "DVA", "BF.B", "FMC", "MHK", "BEN", "QRVO", "PARA",
+    "WBA", "FOX", "NWS", "AMTM"
 ]
+
+# SP500_TICKERS = [
+#     "AAPL", "NVDA", "MSFT", "AMZN", "META", "GOOGL", "TSLA", "BRK.B", "GOOG", "AVGO",
+#     "JPM", "LLY", "UNH", "XOM", "V", "MA", "COST", "HD", "PG", "WMT", "NFLX", "JNJ",
+#     "CRM", "BAC", "ABBV", "ORCL", "CVX", "WFC", "MRK", "KO", "CSCO", "ADBE", "ACN",
+#     "AMD", "PEP", "NOW", "LIN", "MCD", "IBM", "DIS", "PM", "ABT", "GE", "CAT", "TMO"
+# ]
 
 
 # Configure Selenium WebDriver
@@ -116,38 +166,38 @@ def update_progress(current, total):
 def fetch_data_for_all_tickers(tickers):
     driver = configure_webdriver()
     all_data = []
-    total_tasks = len(tickers)
 
     for idx, ticker in enumerate(tickers, start=1):
         try:
-            # Check if the last row in all_data has a valid ticker
-            if all_data and not isinstance(all_data[-1].get("ticker"), str):
-                print(f"Deleting invalid row: {all_data[-1]}")
-                all_data.pop()  # Remove the last invalid row
-
             # Fetch numerical data for the ticker
             numerical_data = get_ticker_numerical_data(ticker)
+
+            # Skip if ticker data is invalid
+            if not numerical_data.get("ticker"):
+                print(f"Skipping invalid ticker data for {ticker}")
+                continue
+
+            # Fetch Yahoo Finance news links
             news_links = get_yahoo_finance_news_links(ticker, driver)
 
-            # Fetch and assign articles
-            for i in range(14):  # Ensure exactly 14 article slots
+            # Add up to 14 articles
+            for i in range(14):
                 if i < len(news_links):
-                    url = news_links[i]
-                    article_text = get_article_text_from_url(url)
+                    article_text = get_article_text_from_url(news_links[i])
                     numerical_data[f"Article {i + 1}"] = article_text if article_text else "no article"
                 else:
-                    # Fill missing articles with "no article"
                     numerical_data[f"Article {i + 1}"] = "no article"
 
-            # Append the processed data
+            # Append the complete data
             all_data.append(numerical_data)
+
         except Exception as e:
-            print(f"\nError processing ticker {ticker}: {e}")
-        finally:
-            update_progress(idx, total_tasks)
+            print(f"Error processing ticker {ticker}: {e}")
+
+        # Display progress
+        update_progress(idx, len(tickers))
 
     driver.quit()
-    sys.stdout.write("\n")  # Newline after progress completes
     return all_data
 
 # Export data to CSV
