@@ -14,103 +14,222 @@ BODY_BACKGROUND = "#212121"  # Background color for the entire page
 
 # User Interface
 app_ui = ui.page_fluid(
-    # Single Card
-    ui.card(
-        # Card Title
-        ui.card_header(
-            ui.h2("AI-Powered News Analysis for Stock Market Forecasting", style=f"color: white; margin: 0; text-align: center;"),
-            style=f"background-color: {PRIMARY_COLOR}; padding: 10px;",  # Dynamic primary color
-        ),
-        # Card Content
-        ui.div(
-            ui.output_ui("circle_output"),  # Placeholder for the chart
-            ui.div(
-                ui.output_text("percentage_label"),
-                style="text-align: center; margin-top: 0px;",  # Reduced margin-top for label
-            ),
-            # Input text box and generate button
-            ui.div(
-                ui.div(
-                    ui.input_text("input_text", "S&P 500 Stock Ticker:", value=""),
-                    style=f"color: {WHITE_COLOR}; margin-top: 10px; width: 80%; text-align: center;",
-                ),
-                ui.div(
-                    ui.input_action_button("generate_btn", "Generate"),
-                    style=f"background-color: {PRIMARY_COLOR}; color: white; margin-top: 10px; width: 50%; text-align: center; border-",
-                ),
-                style="display: flex; flex-direction: column; align-items: center; margin-top: 10px;",  # Center inputs
-            ),
-            style="display: flex; flex-direction: column; align-items: center; padding: 10px;",  # Reduced padding
-        ),
-        style=(
-            f"background-color: {BACKGROUND_COLOR}; "
-            "border-radius: 10px; "
-            "padding: 0px; "  # Reduced padding
-            "max-width: 700px; "  # Set max width
-            "margin: 0 auto;"  # Center the card
-        ),
-    ),
-    # Add CSS for responsiveness and color palette
     ui.tags.style(f"""
         body {{
             background-color: {BODY_BACKGROUND};  /* Set the body background color */
             color: white;  /* Default text color for dark background */
+            font-family: Arial, sans-serif;
         }}
-        #circle_output img {{
-            width: 50vw;  /* 50% of the viewport width */
-            height: auto; /* Maintain aspect ratio */
-            max-width: 500px; /* Limit the maximum size */
+        .dashboard {{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            padding: 20px;
         }}
-        #percentage_label {{
-            font-size: 1.5vw; /* Relative font size to viewport width */
-            max-font-size: 20px; /* Limit the maximum font size */
-            color: {PRIMARY_COLOR}; /* Primary color for the label */
+        .card {{
+            background-color: {BACKGROUND_COLOR};
+            border-radius: 10px;
+            width: 300px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }}
+        .card-header {{
+            background-color: {PRIMARY_COLOR};
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+        }}
+        .card-content {{
+            flex: 1;
+            padding: 10px;
+            font-size: 0.9em;
+            max-height: 300px;  /* Set maximum height for card content */
+            overflow-y: auto;  /* Enable vertical scrolling if content overflows */
         }}
     """),
+    ui.div(
+        ui.div(
+            ui.div(
+                ui.div("Input Field", class_="card-header"),
+                ui.div(ui.input_text("input_text", "S&P 500 Stock Ticker:", value=""), class_="card-content"),
+                ui.div(ui.input_action_button("generate_btn", "Generate"), style="text-align: center; margin-top: 10px;"),
+                class_="card",
+            ),
+            ui.div(
+                ui.div("Forecast Prediction", class_="card-header"),
+                ui.div(ui.output_ui("forecast_output"), class_="card-content"),
+                class_="card",
+            ),
+            ui.div(
+                ui.div("Current Stock Data", class_="card-header"),
+                ui.div(ui.output_ui("stock_data_output"), class_="card-content"),
+                class_="card",
+            ),
+            ui.div(
+                ui.div("LLM Interpretation", class_="card-header"),
+                ui.div(ui.output_ui("llm_interpretation_output"), class_="card-content"),
+                class_="card",
+            ),
+            ui.div(
+                ui.div("Article 1", class_="card-header"),
+                ui.div(ui.output_ui("article_1_output"), class_="card-content"),
+                class_="card",
+            ),
+            ui.div(
+                ui.div("Article 2", class_="card-header"),
+                ui.div(ui.output_ui("article_2_output"), class_="card-content"),
+                class_="card",
+            ),
+            ui.div(
+                ui.div("Article 3", class_="card-header"),
+                ui.div(ui.output_ui("article_3_output"), class_="card-content"),
+                class_="card",
+            ),
+            ui.div(
+                ui.div("Article 4", class_="card-header"),
+                ui.div(ui.output_ui("article_4_output"), class_="card-content"),
+                class_="card",
+            ),
+            ui.div(
+                ui.div("Article 5", class_="card-header"),
+                ui.div(ui.output_ui("article_5_output"), class_="card-content"),
+                class_="card",
+            ),
+            ui.div(
+                ui.div("Article 6", class_="card-header"),
+                ui.div(ui.output_ui("article_6_output"), class_="card-content"),
+                class_="card",
+            ),
+            ui.div(
+                ui.div("Article 7", class_="card-header"),
+                ui.div(ui.output_ui("article_7_output"), class_="card-content"),
+                class_="card",
+            ),
+            ui.div(
+                ui.div("Article 8", class_="card-header"),
+                ui.div(ui.output_ui("article_8_output"), class_="card-content"),
+                class_="card",
+            ),
+            ui.div(
+                ui.div("Article 9", class_="card-header"),
+                ui.div(ui.output_ui("article_9_output"), class_="card-content"),
+                class_="card",
+            ),
+            ui.div(
+                ui.div("Article 10", class_="card-header"),
+                ui.div(ui.output_ui("article_10_output"), class_="card-content"),
+                class_="card",
+            ),
+            ui.div(
+                ui.div("Article 11", class_="card-header"),
+                ui.div(ui.output_ui("article_11_output"), class_="card-content"),
+                class_="card",
+            ),
+            ui.div(
+                ui.div("Article 12", class_="card-header"),
+                ui.div(ui.output_ui("article_12_output"), class_="card-content"),
+                class_="card",
+            ),
+            ui.div(
+                ui.div("Article 13", class_="card-header"),
+                ui.div(ui.output_ui("article_13_output"), class_="card-content"),
+                class_="card",
+            ),
+            ui.div(
+                ui.div("Article 14", class_="card-header"),
+                ui.div(ui.output_ui("article_14_output"), class_="card-content"),
+                class_="card",
+            ),
+            class_="dashboard",
+        )
+    )
 )
 
-# Server logic
-def server(input, output, session):
-    # Reactive value to hold the percentage
-    percentage = reactive.Value(50)  # Initialized to 50% for this example
 
-    # Render the pie chart
+
+from input_ticker_obj import StockData  # Import the StockData class
+from shiny import App, ui, render, reactive
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+
+def server(input, output, session):
+    # Reactive value to store the StockData object
+    stock_data = reactive.Value(None)
+
+    @reactive.Effect
+    @reactive.event(input.generate_btn)
+    def handle_generate_click():
+        logging.info("Hi")  # Log "Hi" when the button is clicked
+
+        # Fetch the ticker from the user input
+        ticker = input.input_text()
+        print(f"Input Ticker: {ticker}")  # Debugging
+
+        if not ticker:
+            print("Ticker input is empty.")
+            stock_data.set(None)
+            return
+
+        try:
+            # Fetch StockData (replace with actual logic)
+            from input_ticker_obj import StockData
+            data = StockData(ticker)
+            stock_data.set(data)
+            print(f"Data fetched successfully for ticker: {ticker}")
+        except Exception as e:
+            print(f"Error fetching data for ticker {ticker}: {e}")
+            stock_data.set(None)
+
+    # Render stock data output (numerical and general data)
     @output
     @render.ui
-    def circle_output():
-        # Dynamic size based on percentage of viewport width
-        figure_width = 6  # Use a fixed size for rendering the image
-        fig, ax = plt.subplots(figsize=(figure_width, figure_width), subplot_kw={'aspect': 'equal'})
-        
-        # Set figure background color
-        fig.patch.set_facecolor(BACKGROUND_COLOR)
-        ax.set_facecolor(BACKGROUND_COLOR)  # Set the axes background color to match
-        
-        wedges, _ = ax.pie(
-            [percentage.get(), 100 - percentage.get()],  # Split circle based on percentage
-            startangle=90,
-            colors=[PRIMARY_COLOR, SECONDARY_COLOR],  # Use primary and secondary colors
-            wedgeprops={'edgecolor': 'white'},  # Add border between segments
-        )
-        
-        # Adjust layout to prevent title cutoff
-        fig.tight_layout()
+    def stock_data_output():
+        data = stock_data.get()
+        if data is not None and hasattr(data, "df") and not data.df.empty:
+            stock_info = "<br>".join(
+                f"{col}: {data.df[col].iloc[0]}" for col in data.df.columns if not col.startswith("Article")
+            )
+            return ui.div(ui.HTML(stock_info), class_="card-content")
+        else:
+            return ui.div("No data available.", class_="card-content")
+    # Render dynamic article outputs (Article 1 to Article 14)
+    def render_article_output(article_num):
+        @output(id=f"article_{article_num}_output")
+        @render.ui
+        def dynamic_article_output():
+            data = stock_data.get()
+            column_name = f"Article {article_num}"
+            if data is not None and hasattr(data, "df") and column_name in data.df.columns:
+                article_text = data.df[column_name].iloc[0]
+                return ui.div(article_text, class_="card-content")
+            else:
+                return ui.div(f"No article available for {column_name}.", class_="card-content")
 
-        # Encode the chart as a base64 PNG
-        buf = io.BytesIO()
-        FigureCanvas(fig).print_png(buf)
-        plt.close(fig)
-        img_base64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+        return dynamic_article_output
 
-        # Return as HTML with embedded image
-        img_src = f"data:image/png;base64,{img_base64}"
-        return ui.HTML(f'<img src="{img_src}" id="circle_output">')
+    # Dynamically create renderers for Article 1 to Article 5
+    for i in range(1, 15):
+        render_article_output(i)
 
-    # Render the percentage label below the chart
+    # Placeholder outputs for unused cards
     @output
-    @render.text
-    def percentage_label():
-        return f"Selected Percentage: {percentage.get()}%"
+    @render.ui
+    def forecast_output():
+        return ui.div("Forecast feature is under development.", class_="card-content")
 
+    @output
+    @render.ui
+    def llm_interpretation_output():
+        return ui.div("LLM interpretation is under development.", class_="card-content")        
+        
+        
 # Create the Shiny app
 app = App(app_ui, server)
