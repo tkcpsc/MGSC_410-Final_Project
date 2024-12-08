@@ -1,136 +1,116 @@
 from shiny import App, ui, render, reactive
-import folium
-from geopy.geocoders import Nominatim
-import joblib
-import pandas as pd
+import matplotlib.pyplot as plt
+import io
+import base64
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
-# Load the saved model
-model = joblib.load("xgb_pipeline_model.pkl")
-
-# List of required features
-NUMERICAL_FEATURES = [
-    'taxAssessedValue', 'nearbyHomes/2/price', 'resoFacts/bathroomsFull',
-    'mortgageRates/thirtyYearFixedRate', 'bathrooms', 'adTargets/sqft',
-    'priceHistory/4/price', 'adTargets/bd', 'schools/1/rating',
-    'resoFacts/bathroomsHalf', 'resoFacts/fireplaces', 'photoCount',
-    'nearbyHomes/2/bathrooms', 'nearbyHomes/1/bathrooms', 'nearbyHomes/0/bathrooms',
-    'nearbyHomes/2/livingArea', 'restimateHighPercent', 'nearbyHomes/1/livingArea',
-    'ssid', 'nearbyHomes/0/livingArea', 'nearbyHomes/1/bedrooms',
-    'nearbyHomes/2/bedrooms', 'resoFacts/onMarketDate', 'priceHistory/1/time',
-    'resoFacts/atAGlanceFacts/1/factValue'
-]
-CATEGORICAL_FEATURES = [
-    'adTargets/prange', 'attributionInfo/lastChecked', 'resoFacts/listingTerms',
-    'resoFacts/atAGlanceFacts/3/factValue', 'resoFacts/specialListingConditions',
-    'adTargets/zestibuck', 'adTargets/sqftrange', 'priceHistory/1/date',
-    'nearbyHomes/1/listingTypeDimension', 'adTargets/price_band',
-    'priceHistory/1/attributeSource/infoString3', 'resoFacts/highSchoolDistrict',
-    'resoFacts/appliances/0', 'nearbyHomes/0/listingTypeDimension', 'resoFacts/lotSize',
-    'isPremierBuilder', 'resoFacts/propertySubType/0', 'nearbyHomes/1/homeStatus',
-    'priceHistory/2/date', 'nearbyHomes/1/hdpTypeDimension',
-    'resoFacts/interiorFeatures/0', 'resoFacts/isNewConstruction',
-    'resoFacts/waterSource/0', 'nearbyHomes/1/address/city',
-    'resoFacts/fireplaceFeatures/0'
-]
+# Color Palette
+PRIMARY_COLOR = "#007BFF"  # Primary color (e.g., blue for headers)
+SECONDARY_COLOR = "#D3D3D3"  # Secondary color (e.g., for pie chart empty parts)
+WHITE_COLOR = "#ffffff"  # Secondary color (e.g., for pie chart empty parts)
+BACKGROUND_COLOR = "#2e2e2e"  # Background color for cards and figure
+ACCENT_COLOR = "#FFD700"  # Accent color (e.g., for hover or additional highlights)
+BODY_BACKGROUND = "#212121"  # Background color for the entire page
 
 # User Interface
 app_ui = ui.page_fluid(
-    ui.h2("Real Estate Price Prediction Tool", style="background-color: #6180c2; color: white; padding: 10px; border-radius: 5px;"),
-    ui.row(
-        # Left column with inputs
-        ui.column(
-            6,
-            ui.div(
-                ui.h3("Input", style="background-color: #6180c2; color: white; padding: 10px; border-radius: 5px 5px 0 0; margin: 0;"),
-                ui.div(
-                    ui.input_text("address_input", "Enter Address", ""),
-                    ui.input_text("city", "Enter City", ""),
-                    ui.input_text("state", "Enter State", ""),
-                    ui.input_text("zip_code", "Enter Zipcode", ""),
-                    ui.input_text_area("num_bedroom", "Enter Number of Bedrooms", ""),
-                    ui.input_text_area("num_bathrooms", "Enter Number of Bathrooms", ""),
-                    ui.input_action_button("generate_btn", "Generate"),
-                    style="background-color: white; border: 2px solid #6180c2; padding: 15px; border-radius: 0 0 5px 5px;"
-                ),
-            )
+    # Single Card
+    ui.card(
+        # Card Title
+        ui.card_header(
+            ui.h2("AI-Powered News Analysis for Stock Market Forecasting", style=f"color: white; margin: 0; text-align: center;"),
+            style=f"background-color: {PRIMARY_COLOR}; padding: 10px;",  # Dynamic primary color
         ),
-        # Right column with outputs
-        ui.column(
-            6,
+        # Card Content
+        ui.div(
+            ui.output_ui("circle_output"),  # Placeholder for the chart
             ui.div(
-                ui.h3("Output", style="background-color: #6180c2; color: white; padding: 10px; border-radius: 5px 5px 0 0; margin: 0;"),
+                ui.output_text("percentage_label"),
+                style="text-align: center; margin-top: 0px;",  # Reduced margin-top for label
+            ),
+            # Input text box and generate button
+            ui.div(
                 ui.div(
-                    ui.h4("Map"),
-                    ui.output_ui("map_output"),
-                    ui.h4("Predicted Price:"),
-                    ui.output_text_verbatim("score_output"),
-                    style="background-color: white; border: 2px solid #6180c2; padding: 15px; border-radius: 0 0 5px 5px;"
+                    ui.input_text("input_text", "S&P 500 Stock Ticker:", value=""),
+                    style=f"color: {WHITE_COLOR}; margin-top: 10px; width: 80%; text-align: center;",
                 ),
-            )
+                ui.div(
+                    ui.input_action_button("generate_btn", "Generate"),
+                    style=f"background-color: {PRIMARY_COLOR}; color: white; margin-top: 10px; width: 50%; text-align: center; border-",
+                ),
+                style="display: flex; flex-direction: column; align-items: center; margin-top: 10px;",  # Center inputs
+            ),
+            style="display: flex; flex-direction: column; align-items: center; padding: 10px;",  # Reduced padding
+        ),
+        style=(
+            f"background-color: {BACKGROUND_COLOR}; "
+            "border-radius: 10px; "
+            "padding: 0px; "  # Reduced padding
+            "max-width: 700px; "  # Set max width
+            "margin: 0 auto;"  # Center the card
         ),
     ),
+    # Add CSS for responsiveness and color palette
+    ui.tags.style(f"""
+        body {{
+            background-color: {BODY_BACKGROUND};  /* Set the body background color */
+            color: white;  /* Default text color for dark background */
+        }}
+        #circle_output img {{
+            width: 50vw;  /* 50% of the viewport width */
+            height: auto; /* Maintain aspect ratio */
+            max-width: 500px; /* Limit the maximum size */
+        }}
+        #percentage_label {{
+            font-size: 1.5vw; /* Relative font size to viewport width */
+            max-font-size: 20px; /* Limit the maximum font size */
+            color: {PRIMARY_COLOR}; /* Primary color for the label */
+        }}
+    """),
 )
 
-# Server function
+# Server logic
 def server(input, output, session):
-    geolocator = Nominatim(user_agent="shiny_app")
-    location_coords = reactive.Value(None)
-    prediction_result = reactive.Value("Enter details and click Generate to see the prediction.")
+    # Reactive value to hold the percentage
+    percentage = reactive.Value(50)  # Initialized to 50% for this example
 
-    @reactive.Effect
-    @reactive.event(input.generate_btn)
-    def generate_output():
-        # Generate map location
-        address = f"{input.address_input()}, {input.city()}, {input.state()} {input.zip_code()}"
-        if address.strip() == ", , ":
-            location_coords.set(None)
-            prediction_result.set("Invalid address. Please enter a valid address.")
-            return
-
-        try:
-            location = geolocator.geocode(address)
-            if location:
-                location_coords.set((location.latitude, location.longitude))
-            else:
-                location_coords.set(None)
-                prediction_result.set("Address not found.")
-                return
-        except Exception as e:
-            location_coords.set(None)
-            prediction_result.set(f"Error locating address: {e}")
-            return
-
-        # Predict price
-        input_features = {feature: None for feature in NUMERICAL_FEATURES + CATEGORICAL_FEATURES}
-        try:
-            input_features['adTargets/bd'] = float(input.num_bedroom()) if input.num_bedroom().strip() else None
-            input_features['bathrooms'] = float(input.num_bathrooms()) if input.num_bathrooms().strip() else None
-
-            # Create DataFrame for prediction
-            input_df = pd.DataFrame([input_features])
-
-            # Predict
-            prediction = model.predict(input_df)[0]
-            prediction_result.set(f"Predicted Price: ${prediction:,.2f}")
-        except Exception as e:
-            prediction_result.set(f"Error predicting price: {e}")
-
+    # Render the pie chart
     @output
     @render.ui
-    def map_output():
-        coords = location_coords.get()
-        if coords is None:
-            return ui.p("Enter a valid address and click 'Generate' to see the map and price.")
-        else:
-            m = folium.Map(location=coords, zoom_start=15)
-            folium.Marker(coords, tooltip="Input Address").add_to(m)
-            map_html = m._repr_html_()
-            return ui.HTML(map_html)
+    def circle_output():
+        # Dynamic size based on percentage of viewport width
+        figure_width = 6  # Use a fixed size for rendering the image
+        fig, ax = plt.subplots(figsize=(figure_width, figure_width), subplot_kw={'aspect': 'equal'})
+        
+        # Set figure background color
+        fig.patch.set_facecolor(BACKGROUND_COLOR)
+        ax.set_facecolor(BACKGROUND_COLOR)  # Set the axes background color to match
+        
+        wedges, _ = ax.pie(
+            [percentage.get(), 100 - percentage.get()],  # Split circle based on percentage
+            startangle=90,
+            colors=[PRIMARY_COLOR, SECONDARY_COLOR],  # Use primary and secondary colors
+            wedgeprops={'edgecolor': 'white'},  # Add border between segments
+        )
+        
+        # Adjust layout to prevent title cutoff
+        fig.tight_layout()
 
+        # Encode the chart as a base64 PNG
+        buf = io.BytesIO()
+        FigureCanvas(fig).print_png(buf)
+        plt.close(fig)
+        img_base64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+
+        # Return as HTML with embedded image
+        img_src = f"data:image/png;base64,{img_base64}"
+        return ui.HTML(f'<img src="{img_src}" id="circle_output">')
+
+    # Render the percentage label below the chart
     @output
     @render.text
-    def score_output():
-        return prediction_result.get()
+    def percentage_label():
+        return f"Selected Percentage: {percentage.get()}%"
 
 # Create the Shiny app
 app = App(app_ui, server)
