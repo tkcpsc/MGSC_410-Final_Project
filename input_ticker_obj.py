@@ -3,7 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 import requests
 import re
@@ -13,7 +13,7 @@ import json
 import numpy as np
 import os
 from dotenv import load_dotenv
-
+import csv
 
 
 class StockData:
@@ -185,7 +185,7 @@ class StockData:
             # Assign an empty DataFrame if no data is available
             self.df = pd.DataFrame()        
         # Initialize variables for each article (1 to 14) with null values
-        for article_num in range(1, 11):
+        for article_num in range(1, 15):
             self.df[f'sentiment_score_article_{article_num}'] = np.nan
             self.df[f'ticker_mentions_article_{article_num}'] = np.nan
             self.df[f'competitor_mentions_article_{article_num}'] = np.nan
@@ -235,6 +235,10 @@ class StockData:
             \n\narticle 8\n,{self.get_article(8)}
             \n\narticle 9\n,{self.get_article(9)}
             \n\narticle 10\n,{self.get_article(10)}
+            \n\narticle 11\n,{self.get_article(11)}
+            \n\narticle 12\n,{self.get_article(12)}
+            \n\narticle 13\n,{self.get_article(13)}
+            \n\narticle 14\n,{self.get_article(14)}
 
         """
         )
@@ -246,7 +250,7 @@ class StockData:
                     {"role": "system", "content": "You are a financial analysis assistant."},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=2000,  # Try to lower this later
+                max_tokens=4000,  # Try to lower this later
                 temperature=0.5
             )
 
@@ -384,6 +388,266 @@ class StockData:
             return "\n".join(result)
         else:
             return "The DataFrame is empty or not initialized."#     """
+
+    def fetch_numerical_data(self):
+        """
+        Fetches numerical stock data using yfinance.
+        """
+        try:
+            stock = yf.Ticker(self.ticker)
+            info = stock.info
+
+            # Populate numerical data
+            self.numerical_data = {
+                "ticker": self.ticker,
+                "date_and_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "Previous Close": info.get("previousClose", "N/A"),
+                "Open": info.get("open", "N/A"),
+                "Bid": info.get("bid", "N/A"),
+                "Ask": info.get("ask", "N/A"),
+                "Day's Range": f"{info.get('dayLow', 'N/A')} - {info.get('dayHigh', 'N/A')}",
+                "52 Week Range": f"{info.get('fiftyTwoWeekLow', 'N/A')} - {info.get('fiftyTwoWeekHigh', 'N/A')}",
+                "Volume": info.get("volume", "N/A"),
+                "Avg. Volume": info.get("averageVolume", "N/A"),
+                "Market Cap (intraday)": info.get("marketCap", "N/A"),
+                "Beta (5Y Monthly)": info.get("beta", "N/A"),
+                "PE Ratio (TTM)": info.get("trailingPE", "N/A"),
+                "EPS (TTM)": info.get("trailingEps", "N/A"),
+                "1y Target Est": info.get("targetMeanPrice", "N/A")
+            }
+
+            # Convert to DataFrame for export
+            self.df = pd.DataFrame([self.numerical_data])
+
+        except Exception as e:
+            print(f"Error fetching data for {self.ticker}: {e}")
+            self.numerical_data = {}
+            self.df = pd.DataFrame()
+
+    def fetch_article_attributes(self):
+            """
+            Fetches the specified attributes from self.df.head() in order.
+
+            Returns:
+                dict: A dictionary containing the specified attributes with their values.
+            """
+            attributes = [
+                "sentiment_score_article_1", "ticker_mentions_article_1", "competitor_mentions_article_1", "urgency_indicators_article_1", "event_detection_article_1", "length_article_1", "complexity_article_1", "relevance_article_1",
+                "sentiment_score_article_2", "ticker_mentions_article_2", "competitor_mentions_article_2", "urgency_indicators_article_2", "event_detection_article_2", "length_article_2", "complexity_article_2", "relevance_article_2",
+                "sentiment_score_article_3", "ticker_mentions_article_3", "competitor_mentions_article_3", "urgency_indicators_article_3", "event_detection_article_3", "length_article_3", "complexity_article_3", "relevance_article_3",
+                "sentiment_score_article_4", "ticker_mentions_article_4", "competitor_mentions_article_4", "urgency_indicators_article_4", "event_detection_article_4", "length_article_4", "complexity_article_4", "relevance_article_4",
+                "sentiment_score_article_5", "ticker_mentions_article_5", "competitor_mentions_article_5", "urgency_indicators_article_5", "event_detection_article_5", "length_article_5", "complexity_article_5", "relevance_article_5",
+                "sentiment_score_article_6", "ticker_mentions_article_6", "competitor_mentions_article_6", "urgency_indicators_article_6", "event_detection_article_6", "length_article_6", "complexity_article_6", "relevance_article_6",
+                "sentiment_score_article_7", "ticker_mentions_article_7", "competitor_mentions_article_7", "urgency_indicators_article_7", "event_detection_article_7", "length_article_7", "complexity_article_7", "relevance_article_7",
+                "sentiment_score_article_8", "ticker_mentions_article_8", "competitor_mentions_article_8", "urgency_indicators_article_8", "event_detection_article_8", "length_article_8", "complexity_article_8", "relevance_article_8",
+                "sentiment_score_article_9", "ticker_mentions_article_9", "competitor_mentions_article_9", "urgency_indicators_article_9", "event_detection_article_9", "length_article_9", "complexity_article_9", "relevance_article_9",
+                "sentiment_score_article_10", "ticker_mentions_article_10", "competitor_mentions_article_10", "urgency_indicators_article_10", "event_detection_article_10", "length_article_10", "complexity_article_10", "relevance_article_10",
+                "sentiment_score_article_11", "ticker_mentions_article_11", "competitor_mentions_article_11", "urgency_indicators_article_11", "event_detection_article_11", "length_article_11", "complexity_article_11", "relevance_article_11",
+                "sentiment_score_article_12", "ticker_mentions_article_12", "competitor_mentions_article_12", "urgency_indicators_article_12", "event_detection_article_12", "length_article_12", "complexity_article_12", "relevance_article_12",
+                "sentiment_score_article_13", "ticker_mentions_article_13", "competitor_mentions_article_13", "urgency_indicators_article_13", "event_detection_article_13", "length_article_13", "complexity_article_13", "relevance_article_13",
+                "sentiment_score_article_14", "ticker_mentions_article_14", "competitor_mentions_article_14", "urgency_indicators_article_14", "event_detection_article_14", "length_article_14", "complexity_article_14", "relevance_article_14"
+            ]
+            # Fetch the first row from self.df
+            if self.df is not None and not self.df.empty:
+                first_row = self.df.head(1).to_dict(orient="records")[0]
+                return {attr: first_row.get(attr, "N/A") for attr in attributes}
+            else:
+                return {attr: "N/A" for attr in attributes}
+            
+            
+
+
+    def fetch_t_values(self):
+        """
+        Fetches closing prices for t, t+1, and t-1 through t-5 for the ticker in self.df.
+        Returns a dictionary with the values in the correct order.
+        """
+        # Initialize the t_values dictionary in the correct order
+        t_values = {"t": None, "t+1": None, "t-1": None, "t-2": None, "t-3": None, "t-4": None, "t-5": None}
+
+        # Ensure the DataFrame contains the required data
+        if self.df is None or self.df.empty:
+            print("DataFrame is empty. Cannot fetch t values.")
+            return t_values
+
+        try:
+            # Retrieve ticker and date
+            ticker = self.df.iloc[0]['ticker']
+            first_row_date_str = self.df.iloc[0]['date_and_time']
+            parsed_date = datetime.strptime(first_row_date_str, "%Y-%m-%d %H:%M:%S")
+        except KeyError as e:
+            print(f"Missing column: {e}")
+            return t_values
+        except ValueError as e:
+            print(f"Invalid date format: {e}")
+            return t_values
+
+        def fetch_closing_price(ticker, target_date, max_retries=7, direction="backward"):
+            """
+            Fetches the closing price for a given ticker and date, with retries.
+            """
+            retry_count = 0
+            delta = -1 if direction == "backward" else 1
+            while retry_count < max_retries:
+                try:
+                    stock = yf.Ticker(ticker)
+                    start_date = target_date.strftime('%Y-%m-%d')
+                    end_date = (target_date + timedelta(days=1)).strftime('%Y-%m-%d')
+                    history = stock.history(start=start_date, end=end_date)
+                    if not history.empty:
+                        closing_price = history['Close'].iloc[0]
+                        return closing_price, retry_count
+                    else:
+                        target_date += timedelta(days=delta)
+                        retry_count += 1
+                except Exception as e:
+                    print(f"Error fetching data for {ticker} on {target_date.date()}: {e}")
+                    target_date += timedelta(days=delta)
+                    retry_count += 1
+            return None, retry_count
+
+        # Initialize backtracking
+        backtrack_days = 0
+
+        # Fetch t (current date)
+        t_price, t_days_back = fetch_closing_price(ticker, parsed_date)
+        if t_price is not None:
+            t_values["t"] = t_price
+            print(f"t on {parsed_date.date()} Closing Price: {t_price} (Backtracked {t_days_back} days)")
+
+        # Fetch t-1 to t-5
+        for i in range(1, 6):
+            target_date = parsed_date - timedelta(days=backtrack_days + 1)
+            price, days_back = fetch_closing_price(ticker, target_date)
+            if price is not None:
+                effective_date = target_date - timedelta(days=days_back)
+                t_values[f"t-{i}"] = price
+                backtrack_days += days_back + 1
+                print(f"t-{i} on {effective_date.date()} Closing Price: {price} (Backtracked {days_back} days)")
+
+        # Fetch t+1
+        target_date = parsed_date + timedelta(days=1)
+        t_plus_1_price, t_plus_1_days_forward = fetch_closing_price(ticker, target_date, direction="forward")
+        if t_plus_1_price is not None:
+            effective_date = target_date + timedelta(days=t_plus_1_days_forward)
+            t_values["t+1"] = t_plus_1_price
+            print(f"t+1 on {effective_date.date()} Closing Price: {t_plus_1_price} (Forwarded {t_plus_1_days_forward} days)")
+
+        return t_values
+
+
+        
+    def export_to_csv(self, filename="data/user_testing_data.csv"):
+        """
+        Exports the stock data to a CSV, including t-values and dummy variables for categorical columns.
+        """
+        required_columns = [
+            "ticker", "date_and_time", "Previous Close", "Open", "Bid", "Ask",
+            "Day's Range", "52 Week Range", "Volume", "Avg. Volume",
+            "Market Cap (intraday)", "Beta (5Y Monthly)", "PE Ratio (TTM)",
+            "EPS (TTM)", "1y Target Est"
+        ]
+
+        if self.df is not None and not self.df.empty:
+            # Ensure the DataFrame contains all required columns
+            for column in required_columns:
+                if column not in self.df.columns:
+                    self.df[column] = "N/A"
+
+            # Fetch article attributes and t-values
+            article_attributes = self.fetch_article_attributes()
+            t_values = self.fetch_t_values()
+
+            # Add article attributes and t-values to the DataFrame
+            for attr, value in {**article_attributes, **t_values}.items():
+                if attr not in self.df.columns:
+                    self.df[attr] = "N/A"
+                self.df.at[0, attr] = value
+
+            # Reorder columns
+            all_columns = required_columns + list(article_attributes.keys()) + list(t_values.keys())
+            for column in all_columns:
+                if column not in self.df.columns:
+                    self.df[column] = "N/A"
+            self.df = self.df[all_columns]
+
+            try:
+                self.df.to_csv(filename, index=False, quoting=csv.QUOTE_MINIMAL)
+                print(f"Data exported successfully to {filename}.")
+            except Exception as e:
+                print(f"Failed to export data to CSV: {e}")
+        else:
+            print("No data available to export.")
+
+        import pandas as pd
+        import numpy as np
+
+        # Load the CSV file into a pandas DataFrame
+        data = pd.read_csv(filename)
+
+        # Fill missing values in sentiment_score_article_1 to sentiment_score_article_14 with 0
+        sentiment_columns = [f'sentiment_score_article_{i}' for i in range(1, 15)]
+        data[sentiment_columns] = data[sentiment_columns].fillna(0)
+
+        # Drop 'ticker' and 'date_and_time' columns
+        data = data.drop(columns=['ticker', 'date_and_time'], errors='ignore')
+
+        # Convert boolean columns to integers (True -> 1, False -> 0)
+        bool_columns = data.select_dtypes(include=['bool']).columns
+        data[bool_columns] = data[bool_columns].astype(int)
+
+        # Define a function to split range columns
+        def split_range_column(df, column):
+            """Splits a range column like 'low - high' into two separate numeric columns."""
+            ranges = df[column].str.split(' - ', expand=True)
+            df[f'{column}_min'] = pd.to_numeric(ranges[0], errors='coerce')
+            df[f'{column}_max'] = pd.to_numeric(ranges[1], errors='coerce')
+            df.drop(columns=[column], inplace=True)
+
+        # Process range columns
+        if "Day's Range" in data.columns:
+            split_range_column(data, "Day's Range")
+        if "52 Week Range" in data.columns:
+            split_range_column(data, "52 Week Range")
+
+        # Drop categorical columns directly
+        categorical_columns = [
+            "urgency_indicators_article_1", "event_detection_article_1", "complexity_article_1", "relevance_article_1",
+            "urgency_indicators_article_2", "event_detection_article_2", "complexity_article_2", "relevance_article_2",
+            "urgency_indicators_article_3", "event_detection_article_3", "complexity_article_3", "relevance_article_3",
+            "urgency_indicators_article_4", "event_detection_article_4", "complexity_article_4", "relevance_article_4",
+            "urgency_indicators_article_5", "event_detection_article_5", "complexity_article_5", "relevance_article_5",
+            "urgency_indicators_article_6", "event_detection_article_6", "complexity_article_6", "relevance_article_6",
+            "urgency_indicators_article_7", "event_detection_article_7", "complexity_article_7", "relevance_article_7",
+            "urgency_indicators_article_8", "event_detection_article_8", "complexity_article_8", "relevance_article_8",
+            "urgency_indicators_article_9", "event_detection_article_9", "complexity_article_9", "relevance_article_9",
+            "urgency_indicators_article_10", "event_detection_article_10", "complexity_article_10", "relevance_article_10",
+            "urgency_indicators_article_11", "event_detection_article_11", "complexity_article_11", "relevance_article_11",
+            "urgency_indicators_article_12", "event_detection_article_12", "complexity_article_12", "relevance_article_12",
+            "urgency_indicators_article_13", "event_detection_article_13", "complexity_article_13", "relevance_article_13",
+            "urgency_indicators_article_14", "event_detection_article_14", "complexity_article_14", "relevance_article_14"
+        ]
+        data = data.drop(columns=categorical_columns, errors='ignore')
+
+        # Save the prepared dataset to a new CSV file
+        prepared_file_path = 'data/user_input_cleaned.csv'
+        data.to_csv(prepared_file_path, index=False)
+
+        print(f"Prepared dataset saved to {prepared_file_path}")        
+    
+    
+    
+    
+stock_data = StockData("NVDA")
+stock_data.export_to_csv()  
+
+
+
+
+
+
+
+
 #     View the news links stored in the object.
 #     :return: List of news links or a message if the list is empty.
 #     """
