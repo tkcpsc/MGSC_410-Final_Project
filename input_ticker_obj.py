@@ -8,6 +8,9 @@ import pandas as pd
 import requests
 import re
 import yfinance as yf
+import openai
+import json
+import numpy as np
 
 
 class StockData:
@@ -178,9 +181,103 @@ class StockData:
         else:
             # Assign an empty DataFrame if no data is available
             self.df = pd.DataFrame()        
+        # Initialize variables for each article (1 to 14) with null values
+        for article_num in range(1, 11):
+            self.df[f'sentiment_score_article_{article_num}'] = np.nan
+            self.df[f'ticker_mentions_article_{article_num}'] = np.nan
+            self.df[f'competitor_mentions_article_{article_num}'] = np.nan
+            self.df[f'urgence_indicators_article_{article_num}'] = None
+            self.df[f'event_detection_article_{article_num}'] = None
+            self.df[f'length_article_{article_num}'] = np.nan
+            self.df[f'complexity_article_{article_num}'] = None
+            self.df[f'relevance_article_{article_num}'] = None
+
+        # Example to verify initialization
+        print("\n\nEVERYTHING SHOULD BE NULL FOR LLM\n", self.df.head())
         
         
-        
+        openai.api_key = "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"
+            
+        prompt = (
+            f"""
+            You are an advanced financial text analysis assistant. 
+            Your task is to analyze a stock-related dataframe containing articles and add the following features. 
+            ONLY return a list of the following features for each article using articles 1-14:  
+            sentiment_score_article_1 (a value between -1 for negative, 0 for neutral, and 1 for positive), 
+            ticker_mentions_article_1 (Number of times the company or ticker symbol is mentioned), 
+            competitor_mentions_article_1 (Number of competitor mentions), 
+            urgency_indicators_article_1 (Whether the language in the article suggests urgency (Yes/No)), 
+            event_detection_article_1 (Does the article mention significant events (e.g., earnings, merger, 
+            product launch)? (Yes/No)), length_article_1 (Article Length (word count)), 
+            complexity_article_1 (Complexity of language (e.g., readability score, or "simple"/"complex")), 
+            relevance_article_1 (Relevance to the company (high, medium, low))  
+            if there is no article, input the corresponding null value for that specific features type (0, null, "none", etc.).
+            Only return a list of each new feature per article. do not return any code or anything besides a dictionary of the feature name and the coresponding value.
+            \n\narticle 1\n,{self.get_article(1)}
+            \n\narticle 2\n,{self.get_article(2)}
+            \n\narticle 3\n,{self.get_article(3)}
+            \n\narticle 4\n,{self.get_article(4)}
+            \n\narticle 5\n,{self.get_article(5)}
+            \n\narticle 6\n,{self.get_article(6)}
+            \n\narticle 7\n,{self.get_article(7)}
+            \n\narticle 8\n,{self.get_article(8)}
+            \n\narticle 9\n,{self.get_article(9)}
+            \n\narticle 10\n,{self.get_article(10)}
+
+        """
+        )
+
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": "You are a financial analysis assistant."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=2000,  # Try to lower this later
+                temperature=0.5
+            )
+
+            strategy = response.choices[0].message['content'].strip()
+
+            # Remove backticks and JSON label
+            if strategy.startswith("```json"):
+                strategy = strategy[7:-3].strip()
+
+            # Wrap the response in brackets if it contains multiple top-level JSON objects
+            if not strategy.startswith("["):
+                strategy = f"[{strategy}]"
+
+            # Validate and parse the strategy JSON
+            if not strategy:
+                print("LLM response is empty.")
+                return None
+
+            try:
+                parsed_strategy = json.loads(strategy)
+            except json.JSONDecodeError as e:
+                print(f"Error decoding JSON: {e}")
+                print(f"LLM response: {strategy}")
+                return None
+
+            # Ensure the DataFrame is already initialized and has the required columns
+            if self.df.empty:
+                print("The DataFrame is empty. Ensure data initialization is done before processing.")
+                return None
+
+            # Iterate over each article in the parsed strategy and update the DataFrame
+            for i, article_data in enumerate(parsed_strategy, start=1):
+                for key, value in article_data.items():
+                    column_name = f"{key}"
+                    if column_name in self.df.columns:
+                        self.df.at[0, column_name] = value  # Update the first row with the value
+
+            print("\n\nEVERYTHING SHOULD BE POPULATED FOR LLM\n", self.df.head())
+
+        except openai.OpenAIError as e:
+            print(f"OpenAI API error: {e}")
+            return None
+
         
     def view_columns(self):
         """
@@ -242,8 +339,39 @@ class StockData:
         column_name = f"Article {article_number}"
         return self.df[column_name].iloc[0] if column_name in self.df.columns else None
     
-# def view_news_links(self):
-#     """
+    
+    def get_article_with_attributes(self, article_number):
+        """
+        Get the LLM attributes and the text of a specific article from the DataFrame.
+        :param article_number: The article number to view (1-14).
+        :return: A string with attributes and article text, or a message if the article is not found.
+        """
+        attributes = [
+            f"sentiment_score_article_{article_number}",
+            f"ticker_mentions_article_{article_number}",
+            f"competitor_mentions_article_{article_number}",
+            f"urgence_indicators_article_{article_number}",
+            f"event_detection_article_{article_number}",
+            f"length_article_{article_number}",
+            f"complexity_article_{article_number}",
+            f"relevance_article_{article_number}",
+        ]
+        
+        if self.df is not None and not self.df.empty:
+            result = []
+            for attr in attributes:
+                value = self.df[attr].iloc[0] if attr in self.df.columns else None
+                result.append(f"{attr}: {value}")
+            
+            # Add a blank line between attributes and article text
+            column_name = f"Article {article_number}"
+            article_text = self.df[column_name].iloc[0] if column_name in self.df.columns else "No article text found"
+            result.append("")  # Add an empty string for a blank line
+            result.append(f"Article Text:\n{article_text}")
+            
+            return "\n".join(result)
+        else:
+            return "The DataFrame is empty or not initialized."#     """
 #     View the news links stored in the object.
 #     :return: List of news links or a message if the list is empty.
 #     """
@@ -252,14 +380,21 @@ class StockData:
 #     else:
 #         return "There are no news links."
 
-# # Create an instance of the class
-# stock_data = StockData("AAPL")
 
-# # View the columns of the DataFrame
+
+
+# Create an instance of the class
+# stock_data = StockData("NVDA")
+
+# View the columns of the DataFrame
 # print(stock_data.view_columns())
 # print(stock_data.view_news_links())
 
-# # Access different parts of the DataFrame
+# Access different parts of the DataFrame
 # print(stock_data.get_ticker())  # Outputs the ticker
 # print(stock_data.get_previous_close())  # Outputs the previous close value
-# print(stock_data.get_article(2))  # Outputs the text for "Article 1"
+# print("\n\narticle 1\n", stock_data.get_article(1))  # Outputs the text for "Article 1"
+# print("\n\narticle 2\n", stock_data.get_article(2))  # Outputs the text for "Article 1"
+
+# print("\n\n\n LLM: \n\n")
+# stock_data.llm_hit()

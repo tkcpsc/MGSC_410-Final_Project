@@ -206,15 +206,26 @@ def server(input, output, session):
         @render.ui
         def dynamic_article_output():
             data = stock_data.get()
-            column_name = f"Article {article_num}"
-            if data is not None and hasattr(data, "df") and column_name in data.df.columns:
-                article_text = data.df[column_name].iloc[0]
-                return ui.div(article_text, class_="card-content")
+            if data is not None and hasattr(data, "get_article_with_attributes"):
+                # Use `get_article_with_attributes` to fetch attributes and article text
+                article_info = data.get_article_with_attributes(article_num)
+                if isinstance(article_info, str):
+                    # Split the text while preserving empty lines
+                    lines = article_info.splitlines(keepends=True)
+                    return ui.div(
+                        [
+                            ui.div(line.strip(), class_="attribute-line") if line.strip() else ui.div(" ", class_="empty-line")
+                            for line in lines
+                        ],
+                        class_="card-content"
+                    )
+                else:
+                    return ui.div(f"No article available for Article {article_num}.", class_="card-content")
             else:
-                return ui.div(f"No article available for {column_name}.", class_="card-content")
+                return ui.div(f"No article available for Article {article_num}.", class_="card-content")
 
-        return dynamic_article_output
-
+        return dynamic_article_output 
+       
     # Dynamically create renderers for Article 1 to Article 5
     for i in range(1, 15):
         render_article_output(i)
