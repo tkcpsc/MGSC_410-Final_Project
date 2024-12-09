@@ -64,18 +64,8 @@ app_ui = ui.page_fluid(
                 class_="card",
             ),
             ui.div(
-                ui.div("Forecast Prediction", class_="card-header"),
-                ui.div(ui.output_ui("forecast_output"), class_="card-content"),
-                class_="card",
-            ),  
-            ui.div(
                 ui.div("Current Stock Data", class_="card-header"),
                 ui.div(ui.output_ui("stock_data_output"), class_="card-content"),
-                class_="card",
-            ),
-            ui.div(
-                ui.div("LLM Interpretation", class_="card-header"),
-                ui.div(ui.output_ui("llm_interpretation_output"), class_="card-content"),
                 class_="card",
             ),
             ui.div(
