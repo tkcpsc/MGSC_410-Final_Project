@@ -11,6 +11,8 @@ import yfinance as yf
 import openai
 import json
 import numpy as np
+import os
+
 
 
 class StockData:
@@ -195,8 +197,11 @@ class StockData:
         # Example to verify initialization
         print("\n\nEVERYTHING SHOULD BE NULL FOR LLM\n", self.df.head())
         
-        
-        openai.api_key = "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"
+        openai.api_key = os.getenv("OPENAI_API_KEY")
+        if not openai.api_key:
+            raise ValueError("OPENAI_API_KEY environment variable is not set.")
+   
+           
             
         prompt = (
             f"""
