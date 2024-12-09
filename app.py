@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import io
 import base64
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+import pandas as pd
+
 
 # Color Palette
 PRIMARY_COLOR = "#007BFF"  # Primary color (e.g., blue for headers)
@@ -65,7 +67,7 @@ app_ui = ui.page_fluid(
                 ui.div("Forecast Prediction", class_="card-header"),
                 ui.div(ui.output_ui("forecast_output"), class_="card-content"),
                 class_="card",
-            ),
+            ),  
             ui.div(
                 ui.div("Current Stock Data", class_="card-header"),
                 ui.div(ui.output_ui("stock_data_output"), class_="card-content"),
@@ -161,13 +163,14 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 def server(input, output, session):
-    # Reactive value to store the StockData object
+    # Reactive values to store the StockData object and forecast result
     stock_data = reactive.Value(None)
+    forecast_result = reactive.Value(None)
 
     @reactive.Effect
     @reactive.event(input.generate_btn)
     def handle_generate_click():
-        logging.info("Hi")  # Log "Hi" when the button is clicked
+        logging.info("Generate button clicked.")
 
         # Fetch the ticker from the user input
         ticker = input.input_text()
@@ -176,31 +179,45 @@ def server(input, output, session):
         if not ticker:
             print("Ticker input is empty.")
             stock_data.set(None)
+            forecast_result.set("No ticker provided.")
             return
 
         try:
-            # Fetch StockData (replace with actual logic)
+            # Initialize StockData and run the model
             from input_ticker_obj import StockData
             data = StockData(ticker)
+
+            print("Running model...")
+            result = data.run_model()  # Run the model and fetch the result
             stock_data.set(data)
+            forecast_result.set(f"Predicted t+1 price: {result}")  # Store result
+
             print(f"Data fetched successfully for ticker: {ticker}")
         except Exception as e:
-            print(f"Error fetching data for ticker {ticker}: {e}")
+            error_message = f"Error fetching data for ticker {ticker}: {e}"
+            print(error_message)
             stock_data.set(None)
+            forecast_result.set(error_message)
 
-    # Render stock data output (numerical and general data)
+    # Render stock data output (numerical and general data + forecast result)
     @output
     @render.ui
     def stock_data_output():
         data = stock_data.get()
+        result = forecast_result.get()  # Get the prediction result
         if data is not None and hasattr(data, "df") and not data.df.empty:
+            # Display stock data along with the prediction result
             stock_info = "<br>".join(
                 f"{col}: {data.df[col].iloc[0]}" for col in data.df.columns if not col.startswith("Article")
             )
+            if result:
+                stock_info += f"<br><strong>{result}</strong>"  # Append the prediction result
             return ui.div(ui.HTML(stock_info), class_="card-content")
         else:
             return ui.div("No data available.", class_="card-content")
-    # Render dynamic article outputs (Article 1 to Article 14)
+        
+    
+    
     def render_article_output(article_num):
         @output(id=f"article_{article_num}_output")
         @render.ui
