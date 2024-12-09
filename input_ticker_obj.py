@@ -12,6 +12,7 @@ import openai
 import json
 import numpy as np
 import os
+from dotenv import load_dotenv
 
 
 
@@ -197,10 +198,16 @@ class StockData:
         # Example to verify initialization
         print("\n\nEVERYTHING SHOULD BE NULL FOR LLM\n", self.df.head())
         
+        # Load environment variables from key.env
+        load_dotenv("key.env")
+
+        # Access the API key
         openai.api_key = os.getenv("OPENAI_API_KEY")
+
         if not openai.api_key:
             raise ValueError("OPENAI_API_KEY environment variable is not set.")
-   
+
+        print(f"Loaded OpenAI API key: {openai.api_key[:6]}...")  # For debugging (hides most of the key)
            
             
         prompt = (
