@@ -1,0 +1,8 @@
+selenium
+beautifulsoup4
+pandas
+requests
+yfinance
+openai
+python-dotenv
+numpy
