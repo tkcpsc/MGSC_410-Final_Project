@@ -64,7 +64,7 @@ app_ui = ui.page_fluid(
                 class_="card",
             ),
             ui.div(
-                ui.div("Current Stock Data", class_="card-header"),
+                ui.div("Stock Data", class_="card-header"),
                 ui.div(ui.output_ui("stock_data_output"), class_="card-content"),
                 class_="card",
             ),
