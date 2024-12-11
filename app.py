@@ -304,7 +304,7 @@ app_ui = ui.page_fluid(
             flex: 1;
             padding: 10px;
             font-size: 0.9em;
-            max-height: 300px;
+            max-height: 350px;
             overflow-y: auto; 
         }}
     """),
