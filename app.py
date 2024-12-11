@@ -432,7 +432,7 @@ def server(input, output, session):
             print("Running model...")
             result = data.run_model() 
             stock_data.set(data)
-            forecast_result.set(f"Predicted t+1 price: {result}")  
+            forecast_result.set(f"Predicted stock price for tomorrow: {result}")  
             print(f"Data fetched successfully for ticker: {ticker}")
         except Exception as e:
             error_message = f"Error fetching data for ticker {ticker}: {e}"
