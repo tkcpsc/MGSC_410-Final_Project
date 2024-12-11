@@ -18,6 +18,8 @@ from xgboost import XGBRegressor
 
 class StockData:
     def __init__(self, ticker):
+        self.news_links = []
+        self.article_texts = []
     
         # Configure Selenium WebDriver
         def configure_webdriver():
@@ -62,7 +64,6 @@ class StockData:
                 driver.get(url)
                 soup = BeautifulSoup(driver.page_source, 'html.parser')
                 news_items = soup.find_all('section', {'data-testid': 'storyitem'})
-
                 links = []
                 print("Extracting links from news items...")
                 for item in news_items:
@@ -153,14 +154,19 @@ class StockData:
 
                 # Fetch Yahoo Finance news links
                 news_links = get_yahoo_finance_news_links(ticker, driver)
-
+                self.news_links = news_links
+    
                 # Add up to 14 articles
                 print(f"Processing up to 14 articles for ticker: {ticker}")
                 for i in range(14):
                     if i < len(news_links):
                         print(f"Fetching article {i + 1}...")
                         article_text = get_article_text_from_url(news_links[i])
+                        self.article_texts.append(article_text if article_text else "no article")
+                        # print("=====================================================================================================================================")
+                        # print(self.article_texts[-1])  # Prints the last appended article text                        print(article_text)
                         numerical_data[f"Article {i + 1}"] = article_text if article_text else "no article"
+
                     else:
                         print(f"No article {i + 1} found.")
                         numerical_data[f"Article {i + 1}"] = "no article"
@@ -357,13 +363,15 @@ class StockData:
         column_name = f"Article {article_number}"
         return self.df[column_name].iloc[0] if column_name in self.df.columns else None
     
-    
     def get_article_with_attributes(self, article_number):
         """
-        Get the LLM attributes and the text of a specific article from the DataFrame.
+        Get the LLM attributes, the link, and the text of a specific article from the DataFrame.
         :param article_number: The article number to view (1-14).
-        :return: A string with attributes and article text, or a message if the article is not found.
+        :return: A string with the link, attributes, and article text, or a message if the article is not found.
         """
+        if self.df is None or self.df.empty:
+            return "The DataFrame is empty or not initialized."
+
         attributes = [
             f"sentiment_score_article_{article_number}",
             f"ticker_mentions_article_{article_number}",
@@ -374,22 +382,34 @@ class StockData:
             f"complexity_article_{article_number}",
             f"relevance_article_{article_number}",
         ]
-        
-        if self.df is not None and not self.df.empty:
-            result = []
-            for attr in attributes:
-                value = self.df[attr].iloc[0] if attr in self.df.columns else None
-                result.append(f"{attr}: {value}")
-            
-            # Add a blank line between attributes and article text
-            column_name = f"Article {article_number}"
-            article_text = self.df[column_name].iloc[0] if column_name in self.df.columns else "No article text found"
-            result.append("")  # Add an empty string for a blank line
-            result.append(f"Article Text:\n{article_text}")
-            
-            return "\n".join(result)
+
+        lines = []
+
+        # Add link
+        if self.news_links and len(self.news_links) >= article_number:
+            lines.append(f"Article Link:\n{self.news_links[article_number - 1]}")
         else:
-            return "The DataFrame is empty or not initialized."#     """
+            lines.append("Article Link:\nNo link available")
+
+        lines.append("")  # Blank line after link
+
+        # Add attributes
+        for attr in attributes:
+            value = self.df[attr].iloc[0] if attr in self.df.columns else None
+            lines.append(f"{attr}: {value}")
+
+        lines.append("")  # Blank line
+
+        # Add article text from self.article_texts
+        if self.article_texts and len(self.article_texts) >= article_number:
+            article_text = self.article_texts[article_number - 1] if self.article_texts[article_number - 1] else "No article text found"
+        else:
+            article_text = "No article text found"
+
+        lines.append(f"Article Text:\n{article_text}")
+        
+        return "\n".join(lines)
+
 
     def fetch_numerical_data(self):
         """
